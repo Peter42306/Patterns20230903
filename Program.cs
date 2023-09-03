@@ -6,61 +6,77 @@ using System.Threading.Tasks;
 
 namespace ConsoleAppTestingPatterns
 {
-    public interface ISortStrategy
+    // Общий интерфейс всех стратегий.
+    public interface IAbstractStrategyArithmeticOperation
     {
-        void Sort(List<int> list);
+        double SimpleOperation(double value1, double value2);
     }
-    public class AscendingSortStrategy : ISortStrategy
+
+    // Каждая конкретная стратегия реализует общий интерфейс своим способом.
+    public class ConcreteStrategyPlus : IAbstractStrategyArithmeticOperation
     {
-        public void Sort(List<int> list)
+        public double SimpleOperation(double value1, double value2)
         {
-            list.Sort();
-            Console.WriteLine("Sort by ascending: " + string.Join(", ", list));
+            double result = value1 + value2;
+            Console.WriteLine(result);
+            return result;
         }
     }
 
-    public class DescendingSortStrategy : ISortStrategy
+    public class ConcreteStrategyMinus : IAbstractStrategyArithmeticOperation
     {
-        public void Sort(List<int> list)
+        public double SimpleOperation(double value1, double value2)
         {
-            list.Sort();
-            list.Reverse();
-            Console.WriteLine("Sort be descending: " + string.Join(", ", list));
+            double result = value1 - value2;
+            Console.WriteLine(result);
+            return result;
         }
     }
-    public class Sorter
+
+    public class ConcreteStrategyDevide : IAbstractStrategyArithmeticOperation
     {
-        private ISortStrategy strategy;
-        public Sorter(ISortStrategy strategy)
+        public double SimpleOperation(double value1, double value2)
         {
-            this.strategy = strategy;
-        }
-        public void SetStrategy(ISortStrategy strategy)
-        {
-            this.strategy = strategy;
-        }
-        public void SortList(List<int> list)
-        {
-            this.strategy.Sort(list);
+            double result = value1 / value2;
+            Console.WriteLine(result);
+            return result;
         }
     }
+
+    // Контекст всегда работает со стратегиями через общий интерфейс.
+    // Он не знает, какая именно стратегия ему подана.
+    public class Context
+    {
+        private IAbstractStrategyArithmeticOperation operation;
+        public Context(IAbstractStrategyArithmeticOperation operation)
+        {            
+            this.operation = operation;
+        }
+        public void SetStrategy(IAbstractStrategyArithmeticOperation operation)
+        {
+            this.operation = operation;
+        }
+        public void SimpleOperation(double value1, double value2)
+        {
+            this.operation.SimpleOperation(value1, value2);
+        }
+    }
+
     internal class Program
     {
         static void Main(string[] args)
         {
-            List<int> numbers = new List<int> { 50, 2, 91, 45, 7, 19 };
-            Sorter sorter = new Sorter(new AscendingSortStrategy());
-            sorter.SortList(numbers);
+            double firstValue = 100;
+            double secondValue = 10;
 
-            sorter.SetStrategy(new DescendingSortStrategy());
-            sorter.SortList(numbers);
+            Context newArithmeticOperation = new Context(new ConcreteStrategyPlus());
+            newArithmeticOperation.SimpleOperation(firstValue, secondValue); // 110
 
-            numbers.Add(519);
-            numbers.Add(876);
-            foreach (var item in numbers)
-            {
-                Console.Write(item + " ");
-            }
+            newArithmeticOperation.SetStrategy(new ConcreteStrategyMinus());
+            newArithmeticOperation.SimpleOperation(firstValue, secondValue); // 90
+
+            newArithmeticOperation.SetStrategy(new ConcreteStrategyDevide());
+            newArithmeticOperation.SimpleOperation(firstValue, secondValue); // 10
         }
     }
 }
