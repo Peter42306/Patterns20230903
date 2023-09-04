@@ -1,82 +1,167 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ConsoleAppTestingPatterns
 {
-    // Общий интерфейс всех стратегий.
-    public interface IAbstractStrategyArithmeticOperation
+    public class MyArray
     {
-        double SimpleOperation(double value1, double value2);
-    }
+        private int[] array;
+        
+        Random random=new Random();
 
-    // Каждая конкретная стратегия реализует общий интерфейс своим способом.
-    public class ConcreteStrategyPlus : IAbstractStrategyArithmeticOperation
-    {
-        public double SimpleOperation(double value1, double value2)
+        public MyArray(int minValue, int maxValue, int size)
         {
-            double result = value1 + value2;
-            Console.WriteLine(result);
-            return result;
+            array = new int[size];
+            for (int i = 0; i < size; i++)
+            {
+                array[i] = random.Next(minValue, maxValue);
+            }
         }
-    }
 
-    public class ConcreteStrategyMinus : IAbstractStrategyArithmeticOperation
-    {
-        public double SimpleOperation(double value1, double value2)
+        public void Show()
         {
-            double result = value1 - value2;
-            Console.WriteLine(result);
-            return result;
+            for (int i = 0; i < array.Length; i++)
+            {
+                Console.Write(array[i]+" ");
+            }
+            Console.WriteLine();
         }
-    }
-
-    public class ConcreteStrategyDevide : IAbstractStrategyArithmeticOperation
-    {
-        public double SimpleOperation(double value1, double value2)
+        public int[] ToArray()
         {
-            double result = value1 / value2;
-            Console.WriteLine(result);
-            return result;
+            return array;
         }
     }
 
-    // Контекст всегда работает со стратегиями через общий интерфейс.
-    // Он не знает, какая именно стратегия ему подана.
-    public class Context
+    public class MyArray2D
     {
-        private IAbstractStrategyArithmeticOperation operation;
-        public Context(IAbstractStrategyArithmeticOperation operation)
-        {            
-            this.operation = operation;
-        }
-        public void SetStrategy(IAbstractStrategyArithmeticOperation operation)
+        private int[,] array2D;
+
+        Random random = new Random();
+        public MyArray2D(int minValue, int maxValue, int rows, int columns)
         {
-            this.operation = operation;
+            array2D = new int[rows, columns];
+
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    array2D[i, j] = random.Next(minValue, maxValue);
+                }
+            }
         }
-        public void SimpleOperation(double value1, double value2)
+        public void Show()
         {
-            this.operation.SimpleOperation(value1, value2);
+            int rows=array2D.GetLength(0);
+            int columns=array2D.GetLength(1);
+
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    Console.Write(array2D[i, j]+" ");
+                }
+                Console.WriteLine();
+            }
+        }
+
+
+        public int[] ToArray()
+        {
+            int rows = array2D.GetLength(0);
+            int columns = array2D.GetLength(1);
+
+            int[] flattenedArray = new int[rows * columns];
+
+            int index = 0;
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    flattenedArray[index] = array2D[i, j];
+                    index++;
+                }
+            }
+
+            return flattenedArray;
+        }
+
+    }
+
+    // Общий интерфейс для всех стратегий
+    public interface IStrategySorting
+    {
+        void Sort(int[] myArray);
+    }
+
+    public interface IStrategyArithmaticOps
+    {
+        void ArithmaticOp(int[] myArray);
+    }
+
+    // Каждая конкретная стратегия реализует общий интерфейс своим способом
+    public class ConcreteSortingAscending : IStrategySorting
+    {
+        public void Sort(int[] myArray)
+        {
+            Array.Sort(myArray);
         }
     }
+    public class ConcreteSortingDescending : IStrategySorting
+    {
+        public void Sort(int[] myArray)
+        {
+            Array.Sort(myArray);
+            Array.Reverse(myArray);
+        }
+    }    
+
+    // Контекст
+    public class ContextSorting
+    {
+        private IStrategySorting sortingStrategy;
+        public ContextSorting(IStrategySorting sortingStrategy)
+        {
+            this.sortingStrategy = sortingStrategy;
+        }
+        public void SetSortingStrategy(IStrategySorting sortingStrategy)
+        {
+            this.sortingStrategy = sortingStrategy;
+        }
+        public void Sorting(int[] myArray)
+        {
+            this.sortingStrategy.Sort(myArray);
+        }        
+    }    
 
     internal class Program
     {
         static void Main(string[] args)
         {
-            double firstValue = 100;
-            double secondValue = 10;
+            MyArray array1 = new MyArray(100, 999, 100);
+            Console.WriteLine("Array 1d:");
+            array1.Show();
+            Console.WriteLine();            
 
-            Context newArithmeticOperation = new Context(new ConcreteStrategyPlus());
-            newArithmeticOperation.SimpleOperation(firstValue, secondValue); // 110
+            Console.WriteLine();
+            ContextSorting contextSorting=new ContextSorting(new ConcreteSortingAscending());
+            contextSorting.Sorting(array1.ToArray());
+            Console.WriteLine("Array 1d, ascended:");
+            array1.Show();
+            Console.WriteLine();
 
-            newArithmeticOperation.SetStrategy(new ConcreteStrategyMinus());
-            newArithmeticOperation.SimpleOperation(firstValue, secondValue); // 90
+            contextSorting.SetSortingStrategy(new ConcreteSortingDescending());
+            contextSorting.Sorting(array1.ToArray());
+            Console.WriteLine("Array 1d: descended:");
+            array1.Show();
+            Console.WriteLine();
 
-            newArithmeticOperation.SetStrategy(new ConcreteStrategyDevide());
-            newArithmeticOperation.SimpleOperation(firstValue, secondValue); // 10
+            MyArray2D array2 = new MyArray2D(100, 999, 10, 50);
+            Console.WriteLine("Array 2d:");
+            array2.Show();            
         }
     }
 }
